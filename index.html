@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨단어 테스트✨</title>
+    <style>
+        /* 폰트 설정 */
+        @font-face {
+            font-family: 'NanumSquareRound';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRound.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        /* 기본 스타일 */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --light-gray: #f8f9fa;
+            --border-color: #dee2e6;
+            --text-color: #212529;
+            --background-color: #f4f7f9;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'NanumSquareRound', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        
+        .main-content-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            width: 100%;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: white;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+        h2 { text-align: center; margin-bottom: 2rem; font-size: 2.2rem; color: var(--primary-color); }
+        h3 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            font-size: 1.3rem;
+            color: var(--text-color);
+        }
+        input, button, select, textarea {
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'NanumSquareRound', sans-serif;
+            background: white;
+            color: var(--text-color);
+            transition: all 0.2s ease-in-out;
+            width: 100%;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover { background-color: #0056b3; transform: translateY(-2px); }
+        
+        .sheet-link-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: var(--light-gray);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            width: auto;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            z-index: 10;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+        .sheet-link-btn:hover {
+            background-color: #e2e6ea;
+        }
+
+        .section-box {
+            background-color: #fdfdff;
+            border-radius: 8px;
+            padding: 0.5rem 1.5rem 1.5rem 1.5rem;
+            margin-top: 1rem;
+            border: 1px solid #eef2f7;
+        }
+
+        .word-list-container { display: none; margin-top: 1rem; }
+        .word-list { max-height: 250px; overflow-y: auto; padding: 1rem; margin-top: 1rem; background: var(--light-gray); border-radius: 8px; border: 1px solid var(--border-color); }
+        .word-count { font-size: 0.9rem; color: var(--secondary-color); margin-top: 1rem; text-align: right; }
+        .filter-group { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .no-words-message { text-align: center; color: var(--secondary-color); font-style: italic; margin-top: 1rem; padding: 1rem; background: var(--light-gray); border-radius: 8px; }
+        .source-tag { display: inline-block; background: #e9ecef; color: #495057; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; margin-left: 0.5rem; }
+        .toggle-list-btn {
+            background-color: var(--secondary-color);
+            margin-top: 1rem;
+        }
+        .toggle-list-btn:hover { background-color: #5a6268; }
+
+        .search-container {
+            position: relative;
+        }
+        .suggestions-list {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .suggestion-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+        }
+        .suggestion-item:hover {
+            background-color: var(--light-gray);
+        }
+
+        .range-filter-container { grid-column: 1 / -1; display: none; }
+        #rangeSearchInput { padding: 0.5rem 0.75rem; font-size: 0.9rem; margin-bottom: 0.5rem; }
+        #rangeTagContainer {
+            display: flex; flex-wrap: wrap; gap: 8px; padding: 10px;
+            background: var(--light-gray); border-radius: 8px; min-height: 40px;
+            margin-top: 0.5rem; user-select: none; border: 1px solid var(--border-color);
+        }
+        .range-tag {
+            background: #e9ecef; color: #495057; border: none; border-radius: 15px;
+            padding: 5px 12px; font-size: 0.9rem; cursor: pointer;
+            transition: all 0.2s ease; width: auto; margin: 0; font-weight: normal;
+        }
+        .range-tag:hover { background: #ced4da; }
+        .range-tag.selected {
+            background: var(--primary-color);
+            color: white; font-weight: bold;
+        }
+
+        #wordDisplay { font-size: 4rem; text-align: center; margin: 2rem 0; font-weight: bold; min-height: 100px; display: flex; align-items: center; justify-content: center; color: var(--text-color); }
+        
+        .show-answer-btn { 
+            background: var(--primary-color); color: white; 
+            font-weight: bold; padding: 1rem 2rem; border-radius: 50px; font-size: 1.5rem; 
+        }
+
+        .control-buttons { position: absolute; top: 20px; right: 20px; display: flex; gap: 5px; z-index: 1000; }
+        .control-buttons button { width: auto; padding: 0.5rem 1rem; margin: 0; font-size: 0.9rem; background-color: var(--light-gray); color: var(--text-color); border: 1px solid var(--border-color); font-weight: normal; }
+        .control-buttons button:hover { background-color: #e2e6ea; }
+        
+        #answerList { list-style: none; padding: 0; }
+        #answerList li { padding: 0.8rem; margin-bottom: 0.5rem; background: var(--light-gray); border-radius: 8px; border-left: 4px solid var(--primary-color); font-weight: 500; }
+        
+        .answer-list-wrapper {
+            max-height: 60vh;
+            overflow-y: auto;
+            margin-top: 1rem;
+            padding-right: 10px;
+        }
+        
+        .progress-bar { width: 100%; height: 8px; background: var(--border-color); border-radius: 4px; overflow: hidden; margin-bottom: 1rem; margin-top: 3rem; }
+        .progress-fill { height: 100%; background: var(--primary-color); transition: width 0.3s ease; }
+        .input-group { display: flex; gap: 1rem; }
+        
+        .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); animation: fadeIn 0.3s; }
+        .modal-content { background-color: white; color: var(--text-color); margin: 10vh auto; padding: 30px; border-radius: 15px; width: 90%; max-width: 700px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: slideIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from {transform: translateY(-50px); opacity: 0;} to {transform: translateY(0); opacity: 1;} }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; position: absolute; top: 10px; right: 20px; cursor: pointer; z-index: 10; }
+        .close-btn:hover, .close-btn:focus { color: black; }
+        .modal-content h2 { text-align: left; font-size: 1.8rem; margin-bottom: 1rem; }
+        
+        #uploadStatusBtn {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            z-index: 999;
+            width: 44px;
+            height: 44px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+            padding: 0;
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        #uploadStatusBtn:hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
+        }
+
+        .side-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 100%;
+            background-color: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1002;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .side-panel.open {
+            transform: translateX(0);
+        }
+        .close-panel-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: var(--secondary-color);
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            width: auto;
+        }
+        .close-panel-btn:hover {
+            color: var(--text-color);
+            transform: none;
+        }
+        .side-panel h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        #uploadStatusList {
+            list-style: none;
+            padding: 0;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        #uploadStatusList .school-list-item {
+            display: block;
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: color 0.2s;
+            font-weight: bold;
+        }
+        #uploadStatusList .school-list-item:hover {
+            color: #0056b3;
+        }
+        #uploadStatusList .source-list {
+            list-style: none;
+            padding-left: 1rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        #uploadStatusList .source-list-item {
+            padding: 0.5rem 0 0.5rem 1rem;
+            color: var(--text-color);
+            border-left: 2px solid var(--light-gray);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #uploadStatusList .source-list-item:hover {
+            background-color: var(--light-gray);
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            z-index: 1001;
+        }
+
+        @media (max-width: 768px) {
+            .main-content-wrapper {
+                padding: 1rem 0;
+            }
+            .container { padding: 1.5rem 1rem; }
+            .sheet-link-btn { display: none; }
+            .top-buttons { display: none; } /* 모바일에선 요청 버튼 숨김 */
+            #wordDisplay { font-size: 2.5rem; }
+            .control-buttons { position: static; justify-content: center; margin-bottom: 1rem; }
+            .filter-group { grid-template-columns: 1fr; }
+            .input-group { flex-direction: column; }
+            #uploadStatusBtn { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <button id="uploadStatusBtn" title="업로드 현황">✨</button>
+
+    <div id="sidePanel" class="side-panel">
+        <button id="closePanelBtn" class="close-panel-btn">&times;</button>
+        <h2>✨️업로드 현황✨️</h2>
+        <div id="uploadStatusList"></div>
+    </div>
+    <div id="overlay"></div>
+
+    <div id="answerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeAnswers()">&times;</span>
+            <h2>📝 정답지</h2>
+            <div class="answer-list-wrapper">
+                <ul id="answerList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content-wrapper">
+        <div id="setup" class="container">
+            <a href="https://docs.google.com/spreadsheets/d/17fZhv9li82A_gKxcBtohVX0b1qi9qpb7q-URwHQuGx4/edit?gid=0#gid=0" target="_blank" class="sheet-link-btn">📌 단어 입력 시트</a>
+            <h2>✨ 단어 테스트 ✨</h2>
+            
+            <div id="filterSection" class="section-box">
+                <h3>1. 테스트 범위 설정 (필터)</h3>
+                <div class="filter-group">
+                    <div class="search-container">
+                        <input type="text" id="schoolGradeInput" placeholder="학교/학년 검색 또는 선택..." autocomplete="off">
+                        <div id="schoolGradeSuggestions" class="suggestions-list"></div>
+                    </div>
+                    <select id="source">
+                        <option value="all">모든 출처</option>
+                    </select>
+                    <div class="range-filter-container">
+                        <label style="font-size: 0.9rem; color: #555; margin-bottom: 5px; display: block;">범위 (검색 또는 다중 선택)</label>
+                        <input type="text" id="rangeSearchInput" placeholder="범위 검색 또는 아래 태그 선택">
+                        <div id="rangeTagContainer"></div>
+                    </div>
+                </div>
+                <button class="toggle-list-btn" onclick="toggleWordList()">단어 목록 보기</button>
+                <div class="word-list-container">
+                    <div id="wordCount" class="word-count">단어 로딩 중...</div>
+                    <div id="savedWordList" class="word-list"></div>
+                    <div id="noWordsMessage" class="no-words-message" style="display: none;">필터 조건에 맞는 단어가 없습니다.</div>
+                </div>
+            </div>
+
+            <div id="startSection" class="section-box">
+                 <h3>2. 테스트 시작</h3>
+                <input id="titleInput" placeholder="테스트 제목 (예: 효명고 1학년 중간고사)">
+                <div class="input-group">
+                    <input id="wordCountInput" type="number" min="1" max="100" placeholder="문제 수 (기본 30개)">
+                    <button onclick="startTest()">🚀 테스트 시작</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="testArea" style="display:none;" class="container">
+            <div class="control-buttons">
+                <button onclick="goToSetup()">🏠</button>
+                <button onclick="startTest()">🔄</button>
+                <button onclick="showAnswers()">📋</button>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div id="wordDisplay">단어 테스트 시작!</div>
+        </div>
+    </main>
+
+    <script>
+    const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRgWgLAnE32tZ946d2EAvyqS42sY9sQ-1UfKZaIkN5vBjwnfCyTsJaSrmmU-zVJO8Xyog1hN1QxoLp6/pub?gid=0&single=true&output=csv';
+
+    let allWords = [];
+    let uniqueSchoolGrades = [];
+    let selectedTestWords = [];
+    let selectedRanges = [];
+    let currentIndex = -2;
+    let testTitle = "";
+    let testTimeout = null;
+    let isDragging = false;
+    let dragMode = null; 
+
+    // 모든 함수들은 이 아래에 위치합니다.
+
+    function escapeHtml(text) {
+        if (typeof text !== 'string') return text;
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    function parseCsvLine(line) {
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"' && inQuotes && line[i + 1] === '"') {
+                current += '"';
+                i++; 
+            } else if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                values.push(current);
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        values.push(current);
+        return values.map(v => v.trim());
+    }
+
+    function getFilterValues() {
+        return {
+            schoolGrade: document.getElementById('schoolGradeInput').value,
+            source: document.getElementById('source').value,
+            range: selectedRanges.join(',')
+        };
+    }
+    
+    function getFilteredWords(words, filters) {
+        const schoolGradeSearchTerm = filters.schoolGrade.trim().toLowerCase();
+        const rangeSearchTerm = document.getElementById('rangeSearchInput').value.trim().toLowerCase();
+
+        return words.filter(w => {
+            const schoolGradeMatch = schoolGradeSearchTerm === '' || (w.schoolGrade && w.schoolGrade.toLowerCase().includes(schoolGradeSearchTerm));
+            const sourceMatch = filters.source === 'all' || w.source === filters.source;
+            
+            let rangeMatch;
+            if (rangeSearchTerm) {
+                rangeMatch = w.range && w.range.toLowerCase().startsWith(rangeSearchTerm);
+            } else {
+                const targetRanges = filters.range ? filters.range.split(',') : [];
+                rangeMatch = targetRanges.length === 0 || targetRanges.includes(w.range);
+            }
+            return schoolGradeMatch && sourceMatch && rangeMatch;
+        });
+    }
+    
+    async function loadWordsFromCSV() {
+        try {
+            if (GOOGLE_SHEET_URL.includes('여기에')) {
+                alert('구글 시트 URL을 입력해주세요. 코드 상단의 GOOGLE_SHEET_URL 변수를 수정해야 합니다.');
+                document.getElementById('wordCount').textContent = '구글 시트 URL 필요.';
+                return;
+            }
+            const response = await fetch(`${GOOGLE_SHEET_URL}&t=${new Date().getTime()}`);
+            if (!response.ok) throw new Error(`네트워크 응답 오류: ${response.statusText}`);
+            
+            const csvText = await response.text();
+            const lines = csvText.trim().split(/\r?\n/);
+            
+            if (lines.length < 2) {
+                document.getElementById('wordCount').textContent = '데이터 없음.'; return;
+            }
+
+            const headers = parseCsvLine(lines[0]);
+            const expectedHeaders = ['학교/학년', '출처', '범위', '단어', '의미'];
+            if(headers.length < 5 || headers.slice(0, 5).join() !== expectedHeaders.join()){
+                 alert(`CSV 헤더가 올바르지 않습니다.\n필요한 헤더: ${expectedHeaders.join(', ')}\n현재 파일 헤더: ${headers.join(', ')}`);
+                 document.getElementById('wordCount').textContent = '헤더 오류.'; return;
+            }
+
+            allWords = lines.slice(1).map(line => {
+                const values = parseCsvLine(line);
+                return {
+                    schoolGrade: values[0] || '', source: values[1] || '',
+                    range: values[2] || '', word: values[3] || '',
+                    meaning: values[4] || ''
+                };
+            }).filter(w => w.word && w.meaning);
+
+            uniqueSchoolGrades = [...new Set(allWords.map(w => w.schoolGrade).filter(sg => sg))].sort();
+
+            initializeFilters();
+            setupDragSelection();
+            generateUploadStatus();
+
+        } catch (e) {
+            console.error("CSV 로딩 실패:", e);
+            alert("단어 로딩에 실패했습니다. 인터넷 연결 및 CSV 파일 형식을 확인해주세요.");
+            document.getElementById('wordCount').textContent = '단어 로딩 실패.';
+        }
+    }
+
+    function renderSuggestions(suggestions) {
+        const container = document.getElementById('schoolGradeSuggestions');
+        container.innerHTML = '';
+        if (suggestions.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        suggestions.forEach(item => {
+            const div = document.createElement('div');
+            div.textContent = item;
+            div.className = 'suggestion-item';
+            container.appendChild(div);
+        });
+        container.style.display = 'block';
+    }
+
+    function initializeFilters() {
+        const schoolInput = document.getElementById('schoolGradeInput');
+        const suggestionsContainer = document.getElementById('schoolGradeSuggestions');
+
+        schoolInput.addEventListener('focus', () => {
+            const searchTerm = schoolInput.value.trim().toLowerCase();
+            const filtered = uniqueSchoolGrades.filter(sg => sg.toLowerCase().includes(searchTerm));
+            renderSuggestions(filtered);
+        });
+        
+        schoolInput.addEventListener('input', () => {
+            const searchTerm = schoolInput.value.trim().toLowerCase();
+            const filtered = uniqueSchoolGrades.filter(sg => sg.toLowerCase().includes(searchTerm));
+            renderSuggestions(filtered);
+            updateDependentFilters();
+            displayFilteredWords();
+        });
+
+        schoolInput.addEventListener('blur', () => {
+            setTimeout(() => {
+                suggestionsContainer.style.display = 'none';
+            }, 150);
+        });
+
+        suggestionsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('suggestion-item')) {
+                schoolInput.value = e.target.textContent;
+                suggestionsContainer.style.display = 'none';
+                updateDependentFilters();
+                displayFilteredWords();
+            }
+        });
+
+        document.getElementById('source').addEventListener('change', () => {
+            updateRangeOptions();
+            displayFilteredWords();
+        });
+
+        updateDependentFilters();
+        displayFilteredWords();
+    }
+
+    function updateDependentFilters() {
+        const schoolSearchTerm = document.getElementById('schoolGradeInput').value.trim().toLowerCase();
+        const sourceSelect = document.getElementById('source');
+        const currentSource = sourceSelect.value;
+
+        const relevantWords = schoolSearchTerm === '' 
+            ? allWords 
+            : allWords.filter(w => w.schoolGrade && w.schoolGrade.toLowerCase().includes(schoolSearchTerm));
+        
+        const sources = [...new Set(relevantWords.map(w => w.source).filter(s => s))].sort();
+        
+        sourceSelect.innerHTML = '<option value="all">모든 출처</option>';
+        sources.forEach(s => {
+            const option = document.createElement('option');
+            option.value = s;
+            option.textContent = s;
+            sourceSelect.appendChild(option);
+        });
+
+        if (sources.includes(currentSource)) {
+            sourceSelect.value = currentSource;
+        } else {
+            sourceSelect.value = 'all';
+        }
+
+        updateRangeOptions();
+    }
+
+    function updateRangeOptions() {
+        if (allWords.length === 0) return;
+
+        const rangeContainer = document.querySelector('.range-filter-container');
+        const rangeSearchInput = document.getElementById('rangeSearchInput');
+        const currentSchoolGrade = document.getElementById('schoolGradeInput').value;
+        const currentSource = document.getElementById('source').value;
+        selectedRanges = []; 
+        rangeSearchInput.value = '';
+
+        const schoolSearchTerm = currentSchoolGrade.trim().toLowerCase();
+        if (schoolSearchTerm === '' && currentSource === 'all') {
+            rangeContainer.style.display = 'none';
+            displayFilteredWords();
+            return;
+        }
+        rangeContainer.style.display = 'block';
+        
+        const relevantWords = allWords.filter(w => {
+            const schoolMatch = schoolSearchTerm === '' || (w.schoolGrade && w.schoolGrade.toLowerCase().includes(schoolSearchTerm));
+            const sourceMatch = currentSource === 'all' || w.source === currentSource;
+            return schoolMatch && sourceMatch;
+        });
+        
+        const ranges = [...new Set(relevantWords.map(w => w.range).filter(r => r))].sort();
+        
+        const rangeTagContainer = document.getElementById('rangeTagContainer');
+        if (ranges.length > 0) {
+            rangeTagContainer.innerHTML = ranges.map(r => 
+                `<button class="range-tag" data-range="${escapeHtml(r)}">${escapeHtml(r)}</button>`
+            ).join('');
+        } else {
+            rangeTagContainer.innerHTML = `<span style="font-size: 0.9rem; opacity: 0.7;">선택 가능한 범위가 없습니다.</span>`;
+        }
+        displayFilteredWords();
+    }
+    
+    function setupDragSelection() {
+        const container = document.getElementById('rangeTagContainer');
+        const rangeSearchInput = document.getElementById('rangeSearchInput');
+        
+        container.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('range-tag')) {
+                e.preventDefault();
+                isDragging = true;
+                rangeSearchInput.value = ''; 
+                
+                const tag = e.target;
+                tag.classList.toggle('selected');
+                dragMode = tag.classList.contains('selected') ? 'select' : 'deselect';
+                updateSelectedRangesFromDOM();
+            }
+        });
+
+        container.addEventListener('mouseover', (e) => {
+            if (isDragging && e.target.classList.contains('range-tag')) {
+                const tag = e.target;
+                if (dragMode === 'select' && !tag.classList.contains('selected')) {
+                    tag.classList.add('selected');
+                } else if (dragMode === 'deselect' && tag.classList.contains('selected')) {
+                    tag.classList.remove('selected');
+                }
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                dragMode = null;
+                updateSelectedRangesFromDOM();
+            }
+        });
+    }
+
+    function updateSelectedRangesFromDOM() {
+        selectedRanges = [];
+        document.querySelectorAll('.range-tag.selected').forEach(tag => {
+            selectedRanges.push(tag.dataset.range);
+        });
+        displayFilteredWords();
+    }
+    
+    function displayFilteredWords() {
+        const filters = getFilterValues();
+        const wordListDiv = document.getElementById('savedWordList');
+        const noWordsMessage = document.getElementById('noWordsMessage');
+        const filteredWords = getFilteredWords(allWords, filters);
+
+        document.getElementById('wordCount').textContent = `${filteredWords.length}개의 단어 검색됨 (전체: ${allWords.length}개)`;
+        wordListDiv.innerHTML = filteredWords.length > 0
+            ? filteredWords.map(w => `<p><b>${escapeHtml(w.word)}</b> - ${escapeHtml(w.meaning)} <span class="source-tag">${escapeHtml(w.schoolGrade)} / ${escapeHtml(w.source)} / ${escapeHtml(w.range) || '범위없음'}</span></p>`).join('')
+            : '';
+        noWordsMessage.style.display = filteredWords.length === 0 ? 'block' : 'none';
+    }
+
+    window.toggleWordList = () => {
+        const listContainer = document.querySelector('.word-list-container');
+        const button = document.querySelector('.toggle-list-btn');
+        const isVisible = listContainer.style.display === 'block';
+        
+        listContainer.style.display = isVisible ? 'none' : 'block';
+        button.textContent = isVisible ? '단어 목록 숨기기' : '단어 목록 보기';
+    };
+    
+    document.getElementById('rangeSearchInput').addEventListener('input', (e) => {
+        const searchTerm = e.target.value.trim();
+        selectedRanges = []; 
+        
+        document.querySelectorAll('.range-tag').forEach(tag => {
+            const rangeName = tag.dataset.range;
+            if (searchTerm && rangeName.toLowerCase().startsWith(searchTerm.toLowerCase())) {
+                tag.classList.add('selected');
+                if (!selectedRanges.includes(rangeName)) {
+                    selectedRanges.push(rangeName);
+                }
+            } else {
+                tag.classList.remove('selected');
+            }
+        });
+        
+        if (!searchTerm) {
+            document.querySelectorAll('.range-tag.selected').forEach(tag => tag.classList.remove('selected'));
+        }
+        displayFilteredWords();
+    });
+
+    window.startTest = () => {
+        clearTimeout(testTimeout);
+        const filters = getFilterValues();
+        testTitle = document.getElementById("titleInput").value.trim() || "단어 테스트";
+        const countInput = document.getElementById("wordCountInput").value.trim();
+        const availableWords = getFilteredWords(allWords, filters);
+        
+        if(availableWords.length === 0) {
+            alert("테스트를 시작할 단어가 없습니다. 필터 조건을 확인해주세요."); return;
+        }
+
+        const wordCount = parseInt(countInput);
+        const finalCount = (!isNaN(wordCount) && wordCount > 0) ? Math.min(wordCount, availableWords.length) : Math.min(30, availableWords.length);
+        
+        selectedTestWords = shuffle([...availableWords]).slice(0, finalCount);
+        currentIndex = -2;
+        
+        document.getElementById("setup").style.display = "none";
+        document.getElementById("testArea").style.display = "block";
+        document.getElementById('answerModal').style.display = 'none';
+        
+        showNext();
+    };
+
+    function updateProgress() {
+        const totalSteps = selectedTestWords.length * 2 + 2;
+        const currentStep = Math.max(0, currentIndex + 2);
+        document.getElementById('progressFill').style.width = `${(currentStep / totalSteps) * 100}%`;
+    }
+
+    function showNext() {
+        clearTimeout(testTimeout);
+        updateProgress();
+        const display = document.getElementById("wordDisplay");
+        if (currentIndex === -2) {
+            display.innerHTML = `<span>${escapeHtml(testTitle)}</span>`;
+        } else if (currentIndex === -1 || currentIndex % 2 === 1) {
+            display.innerHTML = "";
+        } else if (currentIndex / 2 < selectedTestWords.length) {
+            display.innerHTML = `<span>${escapeHtml(selectedTestWords[currentIndex / 2].word)}</span>`;
+        } else {
+            display.innerHTML = '<button class="show-answer-btn" onclick="showAnswers()">📋 정답 보기</button>';
+            updateProgress();
+            return;
+        }
+        testTimeout = setTimeout(() => { currentIndex++; showNext(); }, (currentIndex === -1 || currentIndex % 2 === 1) ? 2000 : 3000);
+    }
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    window.goToSetup = () => {
+        clearTimeout(testTimeout);
+        document.getElementById("setup").style.display = "block";
+        document.getElementById("testArea").style.display = "none";
+        document.getElementById('answerModal').style.display = 'none';
+    };
+
+    window.showAnswers = () => {
+        const list = document.getElementById("answerList");
+        list.innerHTML = selectedTestWords.map((pair, index) => 
+            `<li>${index + 1}. ${escapeHtml(pair.word)} - ${escapeHtml(pair.meaning)} <span class="source-tag">${escapeHtml(pair.range) || '범위없음'}</span></li>`
+        ).join('');
+        document.getElementById("answerModal").style.display = "block";
+    };
+
+    window.closeAnswers = () => {
+        document.getElementById('answerModal').style.display = 'none';
+    };
+
+    function setupSidePanel() {
+        const panel = document.getElementById('sidePanel');
+        const openBtn = document.getElementById('uploadStatusBtn');
+        const closeBtn = document.getElementById('closePanelBtn');
+        const overlay = document.getElementById('overlay');
+
+        const closePanel = () => {
+            panel.classList.remove('open');
+            overlay.style.display = 'none';
+        };
+
+        openBtn.addEventListener('click', () => {
+            panel.classList.add('open');
+            overlay.style.display = 'block';
+        });
+        closeBtn.addEventListener('click', closePanel);
+        overlay.addEventListener('click', closePanel);
+    }
+
+    function generateUploadStatus() {
+        if (allWords.length === 0) return;
+
+        const statusData = {};
+        allWords.forEach(word => {
+            if (!word.schoolGrade || !word.source || !word.range) return;
+
+            if (!statusData[word.schoolGrade]) {
+                statusData[word.schoolGrade] = {};
+            }
+            if (!statusData[word.schoolGrade][word.source]) {
+                statusData[word.schoolGrade][word.source] = new Set();
+            }
+            statusData[word.schoolGrade][word.source].add(word.range);
+        });
+
+        let html = '';
+        const sortedSchools = Object.keys(statusData).sort();
+
+        sortedSchools.forEach(school => {
+            html += `<div class="school-group">`;
+            html += `<b class="school-list-item">${escapeHtml(school)}</b>`;
+            
+            const sortedSources = Object.keys(statusData[school]).sort();
+            html += `<ul class="source-list">`;
+            sortedSources.forEach(source => {
+                const sortedRanges = [...statusData[school][source]].sort();
+                sortedRanges.forEach(range => {
+                    const rangePrefix = range.substring(0, 7);
+                    html += `<li class="source-list-item" 
+                                data-school="${escapeHtml(school)}" 
+                                data-source="${escapeHtml(source)}" 
+                                data-range="${escapeHtml(rangePrefix)}">
+                                ${escapeHtml(source)} ${escapeHtml(rangePrefix)}
+                            </li>`;
+                });
+            });
+            html += `</ul></div>`;
+        });
+
+        document.getElementById('uploadStatusList').innerHTML = html;
+    }
+    
+    window.onload = () => {
+        loadWordsFromCSV();
+        setupSidePanel();
+        
+        document.getElementById('uploadStatusList').addEventListener('click', (e) => {
+            const target = e.target;
+            // 학교/학년 이름 (아코디언 토글)
+            if (target.classList.contains('school-list-item')) {
+                const sourceList = target.nextElementSibling;
+                if (sourceList && sourceList.classList.contains('source-list')) {
+                    const isVisible = sourceList.style.maxHeight && sourceList.style.maxHeight !== '0px';
+                    
+                    document.querySelectorAll('#uploadStatusList .source-list').forEach(list => {
+                        list.style.maxHeight = null;
+                    });
+                    
+                    if (!isVisible) {
+                        sourceList.style.maxHeight = sourceList.scrollHeight + "px";
+                    }
+                }
+            // 출처 + 범위 항목 (필터 적용)
+            } else if (target.classList.contains('source-list-item')) {
+                const school = target.dataset.school;
+                const source = target.dataset.source;
+                const range = target.dataset.range;
+
+                document.getElementById('schoolGradeInput').value = school;
+                
+                updateDependentFilters();
+                document.getElementById('source').value = source;
+
+                updateRangeOptions();
+                const rangeInput = document.getElementById('rangeSearchInput');
+                rangeInput.value = range;
+                
+                rangeInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+                document.getElementById('sidePanel').classList.remove('open');
+                document.getElementById('overlay').style.display = 'none';
+            }
+        });
+
+        // Modals setup
+        const requestModal = document.getElementById("requestModal");
+        const answerModal = document.getElementById("answerModal");
+
+        // This part is removed as the button does not exist anymore
+        // const requestBtn = document.getElementById("requestBtn");
+        // requestBtn.addEventListener('click', ...);
+
+        const requestCloseBtn = document.getElementById("requestCloseBtn");
+        if(requestCloseBtn) { // Check if element exists before adding listener
+             requestCloseBtn.addEventListener('click', () => {
+                requestModal.style.display = "none";
+            });
+        }
+       
+        window.addEventListener('click', (event) => {
+            if (event.target == requestModal) requestModal.style.display = "none";
+            if (event.target == answerModal) answerModal.style.display = "none";
+        });
+    };
+</script>
+</body>
+</html>
